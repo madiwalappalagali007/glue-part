@@ -2,41 +2,39 @@ AWSTemplateFormatVersion: '2010-09-09'
 Transform: AWS::Serverless-2016-10-31
 
 Resources:
-  ETLJob:
+   ETLJob:
     Type: AWS::Glue::Job
     Properties:
       Command:
         Name: glueetl
-        ScriptLocation: s3://maddy-proarch/
+        ScriptLocation: s3://maddy-proarch/data.json
       DefaultArguments:
         --TempDir: s3://my-temp-dir
       ExecutionProperty:
         MaxConcurrentRuns: 1
       MaxRetries: 3
-      Name: my-etl-job-new
-      Role: arn:aws:iam::9441-9664-5553:role/AWSGlueServiceRole-job
+      Name: my-etl-job007
+      Role: arn:aws:iam::944196645553:role/GlueServiceRole
       Timeout: 2880
       GlueVersion: '2.0'
 
   ETLTrigger:
-    Type: AWS::Events::Rule
+    Type: AWS::Glue::Trigger
     Properties:
-      Description: Trigger ETL job when new data is added to source database
-      ScheduleExpression: rate(5 minutes)
-      State: ENABLED
-      Targets:
-        - Arn: !GetAtt ETLJob.Arn
-          Id: ETLTrigger
+      Type: SCHEDULED
+      Schedule: rate(5 minutes)
+      Actions:
+        - JobName: !Ref ETLJob
 
   ETLS3Bucket:
     Type: AWS::S3::Bucket
     Properties:
-      BucketName: mytargetbucket123
+      BucketName: etl-outputbucket1
 
   ETLLambda:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: s3://maddy-proarch/lambdacode.zip
+      CodeUri: s3://maddy-proarch/my_lambda.zip
       Handler: index.handler
       Runtime: python3.8
       Timeout: 30
@@ -59,4 +57,62 @@ Resources:
       ProvisionedThroughput:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
-      TableName: my-proarchdb-table1
+      TableName: my-dynamodb-table
+#   ETLJob:
+#     Type: AWS::Glue::Job
+#     Properties:
+#       Command:
+#         Name: glueetl
+#         ScriptLocation: s3://maddy-proarch/
+#       DefaultArguments:
+#         --TempDir: s3://my-temp-dir
+#       ExecutionProperty:
+#         MaxConcurrentRuns: 1
+#       MaxRetries: 3
+#       Name: my-etl-job-new
+#       Role: arn:aws:iam::9441-9664-5553:role/AWSGlueServiceRole-job
+#       Timeout: 2880
+#       GlueVersion: '2.0'
+
+#   ETLTrigger:
+#     Type: AWS::Events::Rule
+#     Properties:
+#       Description: Trigger ETL job when new data is added to source database
+#       ScheduleExpression: rate(5 minutes)
+#       State: ENABLED
+#       Targets:
+#         - Arn: !GetAtt ETLJob.Arn
+#           Id: ETLTrigger
+
+#   ETLS3Bucket:
+#     Type: AWS::S3::Bucket
+#     Properties:
+#       BucketName: mytargetbucket123
+
+#   ETLLambda:
+#     Type: AWS::Serverless::Function
+#     Properties:
+#       CodeUri: s3://maddy-proarch/lambdacode.zip
+#       Handler: index.handler
+#       Runtime: python3.8
+#       Timeout: 30
+#       Events:
+#         S3Trigger:
+#           Type: S3
+#           Properties:
+#             Bucket: !Ref ETLS3Bucket
+#             Events: s3:ObjectCreated:*
+
+#   ETLDynamoDBTable:
+#     Type: AWS::DynamoDB::Table
+#     Properties:
+#       AttributeDefinitions:
+#         - AttributeName: id
+#           AttributeType: S
+#       KeySchema:
+#         - AttributeName: id
+#           KeyType: HASH
+#       ProvisionedThroughput:
+#         ReadCapacityUnits: 1
+#         WriteCapacityUnits: 1
+#       TableName: my-proarchdb-table1
